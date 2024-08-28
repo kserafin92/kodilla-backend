@@ -25,8 +25,8 @@ public class AppointmentService {
     }
 
     public Appointment save(Appointment appointment) {
-        if (appointment == null || appointment.getDateTime() == null) {
-            throw new InvalidDataException("Dane wizyty są nieprawidłowe");
+            if (appointmentRepository.findByDoctor_IdAndDateTime(appointment.getDoctor().getId(), appointment.getDateTime()).isPresent()) {
+            throw new IllegalArgumentException("Nie można utworzyć dwóch wizyt u tego samego doktora w tym samym czasie.");
         }
         return appointmentRepository.save(appointment);
     }

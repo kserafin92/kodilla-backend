@@ -1,8 +1,10 @@
 package com.kodilla.backendapp.service;
 
+import com.kodilla.backendapp.domain.Appointment;
 import com.kodilla.backendapp.domain.Doctor;
 import com.kodilla.backendapp.exception.InvalidDataException;
 import com.kodilla.backendapp.exception.ResourceNotFoundException;
+import com.kodilla.backendapp.repository.AppointmentRepository;
 import com.kodilla.backendapp.repository.DoctorRepository;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -10,9 +12,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -28,6 +29,9 @@ public class DoctorServiceTest {
 
     @Mock
     private DoctorRepository doctorRepository;
+
+    @Mock
+    private AppointmentRepository appointmentRepository;
 
     @Test
     void testFindAll() {
@@ -63,27 +67,41 @@ public class DoctorServiceTest {
     @Test
     void testSaveWithInvalidData() {
         Doctor doctor = new Doctor();
-
-
         assertThrows(InvalidDataException.class, () -> doctorService.save(doctor));
     }
 
-    @Test
-    void testDeleteById() {
-        // Configure mock to simulate the presence of the Doctor with id 1
-        when(doctorRepository.existsById(anyLong())).thenReturn(true);
-        Mockito.doNothing().when(doctorRepository).deleteById(anyLong());
 
-        doctorService.deleteById(1L);
-
-        verify(doctorRepository, times(1)).deleteById(1L);
-    }
 
     @Test
     void testDeleteByIdWhenNotFound() {
-        // Configure mock to simulate absence of the Doctor with id 1
         when(doctorRepository.existsById(anyLong())).thenReturn(false);
 
         assertThrows(ResourceNotFoundException.class, () -> doctorService.deleteById(1L));
     }
+
+    @Test
+    void testDeleteDoctorRemovesAppointments() {
+        Doctor doctor = new Doctor();
+        doctor.setId(1L);
+        doctor.setLastName("Smith");
+        doctor.setSpecialization("Cardiology");
+
+        Appointment appointment1 = new Appointment();
+        appointment1.setId(1L);
+        appointment1.setDoctor(doctor);
+
+        Appointment appointment2 = new Appointment();
+        appointment2.setId(2L);
+        appointment2.setDoctor(doctor);
+
+        doctor.setAppointments(new ArrayList<>(List.of(appointment1, appointment2)));
+
+        when(doctorRepository.findById(1L)).thenReturn(Optional.of(doctor));
+
+        doctorService.deleteById(1L);
+
+        verify(appointmentRepository).deleteById(1L);
+        verify(appointmentRepository).deleteById(2L);
+    }
+
 }
