@@ -16,6 +16,7 @@ import java.util.Optional;
 public class AppointmentService {
 
     private final AppointmentRepository appointmentRepository;
+    private final PublicHolidaysService publicHolidaysService;
 
     public List<Appointment> findAll() {
         return appointmentRepository.findAll();
@@ -30,6 +31,8 @@ public class AppointmentService {
         if (appointmentRepository.findByDoctor_IdAndDateTime(appointment.getDoctor().getId(), appointment.getDateTime()).isPresent()) {
             throw new IllegalArgumentException("Nie można utworzyć dwóch wizyt u tego samego doktora w tym samym czasie.");
         }
+
+
         return appointmentRepository.save(appointment);
     }
     public void deleteById(Long id) {
@@ -42,6 +45,9 @@ public class AppointmentService {
         int hour = dateTime.getHour();
         if (hour < 7 || hour >= 16) {
             throw new InvalidDataException("Wizyty mogą być zaplanowane tylko między 7:00 a 16:00.");
+        }
+        if (publicHolidaysService.isPublicHoliday(dateTime.toLocalDate())){
+            throw new InvalidDataException("Święto, nie można rejerstrować wizyt");
         }
     }
 }

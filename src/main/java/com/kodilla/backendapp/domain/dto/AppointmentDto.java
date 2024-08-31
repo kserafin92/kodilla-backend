@@ -15,4 +15,5 @@ public class AppointmentDto {
     private Long doctorId;
     private Long patientId;
     private Double price;
+
 }
