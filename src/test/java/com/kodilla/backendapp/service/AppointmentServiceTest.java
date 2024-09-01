@@ -21,6 +21,9 @@ class AppointmentServiceTest {
     @Mock
     private AppointmentRepository appointmentRepository;
 
+    @Mock
+    private PublicHolidaysService publicHolidaysService;
+
     @InjectMocks
     private AppointmentService appointmentService;
 
